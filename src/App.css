@@ -1,0 +1,725 @@
+/* ========================================
+   MAISON D'ASSIETTES - APP.CSS
+   Creative Aesthetic Animations & Responsive Design
+   ======================================== */
+
+/* === BASE STYLES === */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* === APP ROOT - FULLY RESPONSIVE === */
+.app-root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  background: #ffffff;
+  position: relative;
+}
+
+/* Desktop/Tablet: Add max-width and center if needed */
+@media (min-width: 768px) {
+  .app-root {
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  /* Optional: Uncomment to add max-width constraint on desktop */
+  /* .app-root > * {
+    max-width: 1200px;
+    width: 100%;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  } */
+}
+
+/* === MOBILE VIEWPORT FIX === */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* === SMOOTH SCROLLING === */
+html {
+  scroll-behavior: smooth;
+}
+
+/* === CUSTOM SCROLLBAR === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #93c5fd, #60a5fa);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
+
+/* === GLASS MORPHISM EFFECT === */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* === FLOATING ANIMATION === */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* === PULSE ANIMATION === */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* === GRADIENT SHIFT ANIMATION === */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-animated {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* === SHIMMER LOADING EFFECT === */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 50%,
+    #f0f0f0 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* === CARD HOVER EFFECTS === */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1),
+              0 6px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.card-hover:active {
+  transform: translateY(-1px);
+}
+
+/* Desktop only: enhanced hover */
+@media (min-width: 768px) and (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15),
+                0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* === BUTTON RIPPLE EFFECT === */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.ripple-effect:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* === IMAGE ZOOM ON HOVER === */
+.image-zoom-container {
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.image-zoom {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-zoom-container:hover .image-zoom {
+  transform: scale(1.15);
+}
+
+/* === FADE IN ANIMATIONS === */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.6s ease-out forwards;
+}
+
+.fade-in-right {
+  animation: fadeInRight 0.6s ease-out forwards;
+}
+
+/* === STAGGER ANIMATION === */
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+.stagger-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* === ROTATE ON HOVER === */
+.rotate-hover {
+  transition: transform 0.3s ease;
+}
+
+.rotate-hover:hover {
+  transform: rotate(5deg);
+}
+
+/* === GLOW EFFECT === */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(96, 165, 250, 0.5),
+                0 0 10px rgba(96, 165, 250, 0.3),
+                0 0 15px rgba(96, 165, 250, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.8),
+                0 0 20px rgba(96, 165, 250, 0.5),
+                0 0 30px rgba(96, 165, 250, 0.3);
+  }
+}
+
+.glow-effect {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* === SKELETON LOADER === */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e5e7eb 25%,
+    #f3f4f6 50%,
+    #e5e7eb 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+/* === NOTIFICATION SLIDE IN === */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-enter {
+  animation: slideInRight 0.4s ease-out;
+}
+
+/* === BOTTOM NAV SLIDE UP === */
+@keyframes slideUpNav {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.nav-slide-up {
+  animation: slideUpNav 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === BADGE BOUNCE === */
+@keyframes badgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.badge-bounce {
+  animation: badgeBounce 0.5s ease;
+}
+
+/* === GRADIENT TEXT === */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === SMOOTH TRANSITIONS === */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === FOCUS STATES === */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+/* === RESPONSIVE DESIGN === */
+
+/* Mobile First - Full Screen by default */
+@media (max-width: 767px) {
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Adjust bottom navigation for mobile */
+  .fixed.bottom-3 {
+    bottom: 0.5rem;
+  }
+  
+  /* Full width inputs on mobile */
+  input, select, textarea, button {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Hide any background or container styling on mobile */
+  body {
+    background: #ffffff !important;
+  }
+}
+
+/* Small Devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .card-hover:hover {
+    transform: translateY(-6px) scale(1.03);
+  }
+}
+
+/* Medium Devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  /* Enhance hover effects for larger screens */
+  .card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15),
+                0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Add parallax-like effect */
+  .parallax-hover {
+    transition: transform 0.3s ease;
+  }
+  
+  .parallax-hover:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+  }
+  
+  /* Better spacing on tablet */
+  .p-4 {
+    padding: 1.5rem;
+  }
+  
+  /* Make buttons more interactive on desktop */
+  button:not(:disabled) {
+    transition: all 0.2s ease;
+  }
+  
+  button:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+  
+  button:not(:disabled):active {
+    transform: translateY(0);
+  }
+}
+
+/* Large Devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  /* Smooth page transitions */
+  .page-transition {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  /* Enhanced image zoom */
+  .image-zoom-container:hover .image-zoom {
+    transform: scale(1.15);
+  }
+  
+  /* Cursor effects */
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+  
+  /* Smooth hover on navigation */
+  nav a {
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  
+  nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #60a5fa;
+    transition: width 0.3s ease;
+  }
+  
+  nav a:hover::after {
+    width: 100%;
+  }
+}
+
+/* Extra Large Devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  /* Enhanced shadows */
+  .shadow-lg {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* === LANDSCAPE MOBILE FIX === */
+@media (max-height: 600px) and (max-width: 900px) {
+  /* Adjust spacing for landscape */
+  .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* === FIT CONTENT TO SCREEN === */
+@media (max-width: 767px) {
+  /* Ensure full viewport usage */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Remove any unwanted margins */
+  body, html, #root {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Bottom navigation positioning */
+  .fixed.bottom-3 {
+    bottom: env(safe-area-inset-bottom, 0.75rem);
+  }
+  
+  /* Account for notch on iOS */
+  .pb-28 {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* === SAFE AREA INSETS (iOS Notch Support) === */
+@supports (padding: max(0px)) {
+  @media (max-width: 767px) {
+    .app-root {
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+}
+
+/* === DARK MODE SUPPORT === */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #475569, #334155);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #64748b, #475569);
+  }
+}
+
+/* === REDUCE MOTION FOR ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === PRINT STYLES === */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* === UTILITY ANIMATIONS === */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* === CUSTOM FOCUS RINGS === */
+.focus-ring-blue:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+}
+
+.focus-ring-yellow:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5);
+}
+
+/* === INTERACTIVE STATES === */
+.active-scale:active {
+  transform: scale(0.95);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+/* === LOADING SPINNER === */
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  border: 3px solid rgba(96, 165, 250, 0.3);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spinner 0.8s linear infinite;
+}
+
+/* === TOUCH FEEDBACK === */
+@media (hover: none) and (pointer: coarse) {
+  /* Enhance touch targets */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover effects on touch devices */
+  .card-hover:hover {
+    transform: none;
+  }
+  
+  /* Add active state feedback */
+  button:active,
+  a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
