@@ -13,11 +13,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function testConnection() {
   try {
-    console.log("🔍 Testing Supabase connection...");
-    const { data: user, error: userError } = await supabase.auth.getUser();
-    if (userError) console.warn("Auth check:", userError.message);
-    else console.log("✅ Auth connected:", user?.user?.id ? "User logged in" : "No user");
-
     const { data, error } = await supabase.from("profiles").select("id").limit(1);
     if (error) {
       console.error("❌ DB check failed:", error.message);

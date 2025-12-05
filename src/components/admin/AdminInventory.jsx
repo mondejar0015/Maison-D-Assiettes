@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { 
   PlusIcon, 
   TrashIcon, 
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
-import AdminHeader from "./shared/AdminHeader.jsx";
-import PageHeader from "../shared/PageHeader.jsx";
 import Img from "../shared/Img.jsx";
 
 export default function AdminInventory({ 
@@ -49,7 +48,7 @@ export default function AdminInventory({
       return;
     }
 
-    const newItem = await addNewItem({
+    const success = await addNewItem({
       title: name,
       price,
       img: preview || "/images/placeholder.png",
@@ -59,7 +58,7 @@ export default function AdminInventory({
       era,
     });
 
-    if (newItem) {
+    if (success) {
       // Reset form
       setName("");
       setType("Dinner Plate");
@@ -74,13 +73,38 @@ export default function AdminInventory({
     }
   }
 
+  // Custom Header with Back Button
+  const CustomHeader = () => (
+    <div className="bg-gradient-to-r from-blue-900 to-purple-800 text-white p-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold">Inventory Management</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              Add, edit, or remove items ({adminItems.length} total)
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => changePage("adminDashboard")}
+          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+        >
+          Dashboard
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white">
-      <AdminHeader 
-        title="Inventory Management"
-        subtitle="Add, edit, or remove items"
-        onLogout={() => changePage("login")}
-      />
+      <CustomHeader />
 
       <div className="p-6">
         {/* Search and Add */}

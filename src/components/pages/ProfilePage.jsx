@@ -17,7 +17,7 @@ export default function ProfilePage({
   
   return (
     <div className="min-h-screen bg-white pb-20">
-      <PageHeader title="Profile" />
+      <PageHeader title="Profile" changePage={changePage} />
       
       <div className="p-4 space-y-4">
         {/* User Info Card */}
@@ -79,41 +79,42 @@ export default function ProfilePage({
         <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
           <div className="font-bold text-sm text-gray-800 mb-2">Account Settings</div>
           <div className="space-y-1">
-            <button
-              type="button"
-              onClick={() => changePage("personal")}
-              className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-            >
-              👤 Personal Info
-            </button>
-            <button
-              type="button"
-              onClick={() => changePage("favorites")}
-              className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-            >
-              ❤️ Favorites ({favorites.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => changePage("paymentMethod")}
-              className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-            >
-              💳 Payment Method
-            </button>
-            <button
-              type="button"
-              onClick={() => changePage("notifications")}
-              className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-            >
-              🔔 Notifications
-            </button>
-            <button
-              type="button"
-              onClick={() => changePage("security")}
-              className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-            >
-              🔒 Security
-            </button>
+            
+<button
+  type="button"
+  onClick={() => changePage("personal")}
+  className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+>
+  👤 Personal Info
+</button>
+<button
+  type="button"
+  onClick={() => changePage("favorites")}
+  className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+>
+  ❤️ Favorites ({favorites.length})
+</button>
+<button
+  type="button"
+  onClick={() => changePage("paymentMethod")}
+  className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+>
+  💳 Payment Method
+</button>
+<button
+  type="button"
+  onClick={() => changePage("notifications")}
+  className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+>
+  🔔 Notifications
+</button>
+<button
+  type="button"
+  onClick={() => changePage("security")}
+  className="w-full text-left text-xs text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+>
+  🔒 Security
+</button>
           </div>
         </div>
 

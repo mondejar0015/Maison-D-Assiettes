@@ -6,7 +6,7 @@ export default function PageHeader({
   showCart = false, 
   showBack = false, 
   onBack, 
-  changePage, 
+  changePage = () => {}, 
   cart = [] 
 }) {
   return (

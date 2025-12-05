@@ -3,9 +3,9 @@ import {
   UserIcon,
   EnvelopeIcon,
   CalendarIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
-import AdminHeader from "./shared/AdminHeader.jsx";
 import AdminStatsCard from "./shared/AdminStatsCard.jsx";
 
 export default function AdminUsers({
@@ -59,13 +59,38 @@ export default function AdminUsers({
     }).length
   };
 
+  // Custom Header with Back Button
+  const CustomHeader = () => (
+    <div className="bg-gradient-to-r from-blue-900 to-purple-800 text-white p-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold">User Management</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              View and manage user accounts
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => changePage("adminDashboard")}
+          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+        >
+          Dashboard
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white">
-      <AdminHeader 
-        title="User Management"
-        subtitle="View and manage user accounts"
-        onLogout={() => changePage("login")}
-      />
+      <CustomHeader />
 
       <div className="p-6">
         {/* Stats */}

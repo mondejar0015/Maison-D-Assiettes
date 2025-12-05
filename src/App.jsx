@@ -1,37 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { supabase, testConnection } from "./supabaseClient.js";
+import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "./supabaseClient.js";
 import PageRouter from "./components/PageRouter.jsx";
-import LoadingOverlay from "./components/layout/LoadingOverlay.jsx";
+import LoadingOverlay from "./components/LoadingOverlay.jsx";
 import "./App.css";
 
-// --- PREDEFINED DATA LISTS (PLATE SPECIFIC) ---
+// --- PREDEFINED DATA LISTS ---
 export const ITEM_TYPES = [
-  "Dinner Plate", 
-  "Salad Plate", 
-  "Dessert Plate", 
-  "Soup Bowl", 
-  "Pasta Bowl",
-  "Charger Plate", 
-  "Serving Platter", 
-  "Saucer", 
-  "Teacup & Saucer Set", 
-  "Appetizer Plate", 
-  "Decorative Plate",
-  "Complete Set"
+  "Dinner Plate", "Salad Plate", "Dessert Plate", "Soup Bowl", "Pasta Bowl",
+  "Charger Plate", "Serving Platter", "Saucer", "Teacup & Saucer Set", 
+  "Appetizer Plate", "Decorative Plate", "Complete Set"
 ];
 
 export const ITEM_ORIGINS = [
-  "French (Limoges)", 
-  "English (Staffordshire)", 
-  "Italian (Majolica)", 
-  "Chinese (Export)", 
-  "Japanese (Imari/Kutani)", 
-  "American", 
-  "German (Meissen)", 
-  "Dutch (Delft)", 
-  "Scandinavian", 
-  "Unknown", 
-  "Other"
+  "French (Limoges)", "English (Staffordshire)", "Italian (Majolica)", 
+  "Chinese (Export)", "Japanese (Imari/Kutani)", "American", "German (Meissen)", 
+  "Dutch (Delft)", "Scandinavian", "Unknown", "Other"
 ];
 
 export const ITEM_ERAS = [
@@ -40,144 +23,90 @@ export const ITEM_ERAS = [
 ];
 
 export const ITEM_MATERIALS = [
-  "Porcelain", 
-  "Bone China", 
-  "Stoneware", 
-  "Earthenware", 
-  "Ironstone", 
-  "Creamware",
-  "Faience", 
-  "Terracotta", 
-  "Glass", 
-  "Ceramic", 
-  "Majolica", 
-  "Pewter",
-  "Silver Plated",
-  "Unknown"
+  "Porcelain", "Bone China", "Stoneware", "Earthenware", "Ironstone", 
+  "Creamware", "Faience", "Terracotta", "Glass", "Ceramic", "Majolica", 
+  "Pewter", "Silver Plated", "Unknown"
 ];
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("loading"); // Start with loading
-  const [historyStack, setHistoryStack] = useState([]);
-  
-  // Auth state
-  const [session, setSession] = useState(null);
+  const [currentPage, setCurrentPage] = useState("loading");
   const [profile, setProfile] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const isSellerView = profile?.is_seller || false;
-
+  const [isAdmin, setIsAdmin] = useState(false);
+  
   // Data states
+  const [items, setItems] = useState([]);
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [sellerItems, setSellerItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [favoriteTab, setFavoriteTab] = useState("items");
-  const [items, setItems] = useState([]);
-  const [loadingItems, setLoadingItems] = useState(true);
+  const [loadingItems, setLoadingItems] = useState(false);
 
-  // Initialize app
+  // Define goBack function with useCallback to prevent re-renders
+  const goBack = useCallback(() => {
+    if (isAdmin) {
+      setCurrentPage("adminDashboard");
+    } else {
+      setCurrentPage("home");
+    }
+  }, [isAdmin]);
+
+  // SIMPLIFIED: Check auth once on mount
   useEffect(() => {
-    console.log("🚀 App initializing...");
+    console.log("🚀 App mounting...");
     
-    // Small delay to show loading screen
-    const timer = setTimeout(() => {
-      console.log("⏱️ Loading screen timeout - moving to starting page");
-      if (authLoading) {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session:", session ? "Found" : "None");
+        
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        } else {
+          console.log("No user, going to starting page");
+          setCurrentPage("starting");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
         setCurrentPage("starting");
       }
-    }, 1500);
+    };
 
-    // Check auth state
-    checkAuthStatus();
-
-    return () => clearTimeout(timer);
+    checkAuth();
   }, []);
 
   // Auth listener
   useEffect(() => {
-    console.log("🔄 Setting up auth listener...");
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("📡 Auth state changed:", _event);
-        setSession(session);
+      async (event, session) => {
+        console.log("Auth event:", event);
         
         if (session?.user) {
-          console.log("✅ User logged in, fetching profile...");
-          await fetchProfile(session.user.id);
+          await loadProfile(session.user.id);
         } else {
-          console.log("🚫 No user, going to login");
+          console.log("User logged out");
           setProfile(null);
-          setAuthLoading(false);
-          if (currentPage === "loading") {
-            setCurrentPage("starting");
-          }
+          setIsAdmin(false);
+          setCart([]);
+          setFavorites([]);
+          setOrders([]);
+          setNotifications([]);
+          setPaymentMethods([]);
+          setCurrentPage("login"); // Changed to go to login page
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [currentPage]);
+  }, []);
 
-  // Check initial auth status
-  async function checkAuthStatus() {
-    try {
-      console.log("🔍 Checking initial auth status...");
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("📱 Initial session:", session ? "Found" : "None");
-      
-      setSession(session);
-      
-      if (session?.user) {
-        console.log("👤 User found, fetching profile...");
-        await fetchProfile(session.user.id);
-      } else {
-        console.log("👤 No user found, going to starting page");
-        setAuthLoading(false);
-        // Move to starting page after a brief delay
-        setTimeout(() => {
-          setCurrentPage("starting");
-        }, 500);
-      }
-    } catch (error) {
-      console.error("❌ Error checking auth status:", error);
-      setAuthLoading(false);
-      setCurrentPage("starting");
-    }
-  }
-
-  // Test connection
-  useEffect(() => {
-    if (!authLoading && currentPage !== "loading") {
-      testConnection();
-    }
-  }, [authLoading, currentPage]);
-
-  // Data fetching based on profile
-  useEffect(() => {
-    if (profile) {
-      console.log("📦 Fetching data for user:", profile.id);
-      fetchItems();
-      fetchCart();
-      fetchFavorites();
-      fetchOrders();
-      fetchNotifications();
-      fetchPaymentMethods();
-      if (profile.is_seller) {
-        fetchSellerItems();
-      }
-    }
-  }, [profile]);
-
-  async function fetchProfile(userId) {
-    console.log("👤 Fetching profile for:", userId);
-    setAuthLoading(true);
+  async function loadProfile(userId) {
+    console.log("Loading profile for:", userId);
     
     try {
-      // Try to get existing profile
+      // Get profile
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -185,62 +114,78 @@ export default function App() {
         .maybeSingle();
       
       if (error) {
-        console.error("fetchProfile error", error);
-        setAuthLoading(false);
-        setCurrentPage("login");
+        console.error("Profile error:", error);
+        await createProfile(userId);
         return;
       }
 
       if (data) {
-        console.log("✅ Found existing profile");
+        console.log("Profile found:", data);
         setProfile(data);
-        setAuthLoading(false);
-        setCurrentPage("home");
-        return;
+        setIsAdmin(data.role === "admin");
+        
+        // Load user data
+        await loadUserData(userId);
+        
+        // Redirect
+        if (data.role === "admin") {
+          setCurrentPage("adminDashboard");
+        } else {
+          setCurrentPage("home");
+        }
+      } else {
+        await createProfile(userId);
       }
+    } catch (err) {
+      console.error("Load profile error:", err);
+      setCurrentPage("starting");
+    }
+  }
 
-      // Create new profile
-      console.log("📝 Creating new profile...");
+  async function createProfile(userId) {
+    console.log("Creating profile for:", userId);
+    
+    try {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
       
       if (!user) {
-        console.error("No user found");
-        setAuthLoading(false);
-        setCurrentPage("login");
+        setCurrentPage("starting");
         return;
       }
 
-      const { data: created, error: insertErr } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .insert({
           id: userId,
-          display_name: user.user_metadata?.display_name || "New User",
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || "New User",
           email: user.email || null,
-          is_seller: user.user_metadata?.is_seller || false,
+          role: 'customer',
         })
         .select()
         .single();
 
-      if (insertErr) {
-        console.error("create profile error", insertErr);
-        setAuthLoading(false);
-        setCurrentPage("login");
+      if (error) {
+        console.error("Create profile error:", error);
+        setCurrentPage("starting");
         return;
       }
 
-      console.log("✅ Created new profile");
-      setProfile(created);
-      setAuthLoading(false);
+      console.log("Profile created:", data);
+      setProfile(data);
+      setIsAdmin(false);
       setCurrentPage("home");
+      await loadUserData(userId);
     } catch (err) {
-      console.error("Unexpected error in fetchProfile", err);
-      setAuthLoading(false);
-      setCurrentPage("login");
+      console.error("Create profile exception:", err);
+      setCurrentPage("starting");
     }
   }
 
-  async function fetchItems() {
+  async function loadUserData(userId) {
+    console.log("Loading user data for:", userId);
+    
+    // Load items
     setLoadingItems(true);
     try {
       const { data, error } = await supabase
@@ -251,20 +196,18 @@ export default function App() {
       if (error) throw error;
       setItems(data || []);
     } catch (error) {
-      console.error("fetchItems error", error);
+      console.error("Load items error:", error);
       setItems([]);
     } finally {
       setLoadingItems(false);
     }
-  }
-
-  async function fetchCart() {
-    if (!profile) return;
+    
+    // Load cart
     try {
       const { data, error } = await supabase
         .from("cart_items")
         .select("id, qty, items(*)")
-        .eq("user_id", profile.id);
+        .eq("user_id", userId);
       
       if (error) throw error;
       
@@ -275,130 +218,58 @@ export default function App() {
       }));
       setCart(remappedCart);
     } catch (error) {
-      console.error("fetchCart error", error);
+      console.error("Load cart error:", error);
       setCart([]);
     }
-  }
-
-  async function fetchFavorites() {
-    if (!profile) return;
+    
+    // Load favorites
     try {
       const { data, error } = await supabase
         .from("favorites")
         .select("id, items(*)")
-        .eq("user_id", profile.id);
+        .eq("user_id", userId);
       
-      if (error) throw error;
-      
-      const favItems = (data || []).map((f) => ({
-        ...f.items,
-        favorite_id: f.id,
-      }));
-      setFavorites(favItems);
+      if (!error && data) {
+        const favItems = data.map((f) => ({
+          ...f.items,
+          favorite_id: f.id,
+        }));
+        setFavorites(favItems);
+      }
     } catch (error) {
-      console.error("fetchFavorites error", error);
+      console.error("Load favorites error:", error);
       setFavorites([]);
     }
-  }
-
-  async function fetchOrders() {
-    if (!profile) return;
+    
+    // Load orders (for history page)
     try {
       const { data, error } = await supabase
         .from("orders")
         .select("*")
-        .eq("user_id", profile.id)
+        .eq("user_id", userId)
         .order("placed_at", { ascending: false });
       
-      if (error) throw error;
-      setOrders(data || []);
+      if (!error && data) {
+        setOrders(data);
+      }
     } catch (error) {
-      console.error("fetchOrders error", error);
+      console.error("Load orders error:", error);
       setOrders([]);
     }
   }
 
-  async function fetchNotifications() {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (error) {
-      console.error("fetchNotifications error", error);
-      setNotifications([]);
-    }
-  }
-
-  async function fetchPaymentMethods() {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from("payment_methods")
-        .select("*")
-        .eq("user_id", profile.id);
-      
-      if (error) throw error;
-      setPaymentMethods(data || []);
-    } catch (error) {
-      console.error("fetchPaymentMethods error", error);
-      setPaymentMethods([]);
-    }
-  }
-
-  async function fetchSellerItems() {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from("seller_items")
-        .select("id, items(*)")
-        .eq("seller_id", profile.id);
-      
-      if (error) throw error;
-      
-      const myItems = (data || []).map((si) => ({
-        ...si.items,
-        seller_item_id: si.id,
-      }));
-      setSellerItems(myItems);
-    } catch (error) {
-      console.error("fetchSellerItems error", error);
-      setSellerItems([]);
-    }
-  }
-
+  // Format currency
   function formatCurrency(n) {
     return "$ " + Number(n).toLocaleString();
   }
 
-  function pushToHistory(page) {
-    setHistoryStack((h) => [...h, page]);
-  }
-
+  // Navigation
   function changePage(page) {
-    console.log("🌐 Changing page to:", page);
-    setHistoryStack((h) => [...h, currentPage]);
+    console.log("Changing page to:", page);
     setCurrentPage(page);
   }
 
-  function goBack() {
-    setHistoryStack((h) => {
-      if (h.length === 0) {
-        setCurrentPage("home");
-        return [];
-      }
-      const next = [...h];
-      const prev = next.pop();
-      setCurrentPage(prev || "home");
-      return next;
-    });
-  }
-
+  // Cart functions
   async function addToCart(item) {
     if (!profile) {
       alert("Please log in to add items to your cart.");
@@ -411,25 +282,23 @@ export default function App() {
       const found = cart.find((x) => x.id === item.id);
       
       if (found) {
-        const { error } = await supabase
+        await supabase
           .from("cart_items")
           .update({ qty: found.qty + 1 })
           .match({ user_id: profile.id, item_id: item.id });
-        if (error) throw error;
       } else {
-        const { error } = await supabase.from("cart_items").insert({
+        await supabase.from("cart_items").insert({
           user_id: profile.id,
           item_id: item.id,
           qty: 1,
         });
-        if (error) throw error;
       }
       
-      // Refresh cart
-      await fetchCart();
+      // Reload cart
+      await loadUserData(profile.id);
     } catch (error) {
-      console.error("addToCart error", error);
-      alert("Error adding to cart: " + error.message);
+      console.error("Add to cart error:", error);
+      alert("Error adding to cart");
     } finally {
       setLoading(false);
     }
@@ -440,15 +309,14 @@ export default function App() {
     
     setLoading(true);
     try {
-      const { error } = await supabase
+      await supabase
         .from("cart_items")
         .delete()
         .match({ user_id: profile.id, item_id: item_id });
       
-      if (error) throw error;
-      await fetchCart();
+      await loadUserData(profile.id);
     } catch (error) {
-      console.error("removeFromCart error", error);
+      console.error("Remove from cart error:", error);
     } finally {
       setLoading(false);
     }
@@ -459,94 +327,20 @@ export default function App() {
     
     setLoading(true);
     try {
-      const { error } = await supabase
+      await supabase
         .from("cart_items")
         .update({ qty: newQty })
         .match({ user_id: profile.id, item_id: item_id });
       
-      if (error) throw error;
-      await fetchCart();
+      await loadUserData(profile.id);
     } catch (error) {
-      console.error("updateCartQty error", error);
+      console.error("Update cart qty error:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function addNewItem({ title, price, img, type, origin, era, material }) {
-    if (!profile) {
-      alert("You must be logged in to add an item.");
-      return null;
-    }
-    
-    setLoading(true);
-    try {
-      const payload = {
-        title: title || "Untitled",
-        price: Number(price) || 0,
-        img: img || "/images/placeholder.png",
-        type: type || "Unknown",
-        origin: origin || "Unknown",
-        era: era ? Number(era) : new Date().getFullYear(),
-        date: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-      };
-
-      const { data: itemData, error: itemError } = await supabase
-        .from("items")
-        .insert(payload)
-        .select()
-        .single();
-
-      if (itemError) throw itemError;
-
-      const { error: sellerError } = await supabase.from("seller_items").insert({
-        seller_id: profile.id,
-        item_id: itemData.id,
-      });
-      
-      if (sellerError) throw sellerError;
-
-      // Refresh data
-      await fetchItems();
-      await fetchSellerItems();
-      
-      return itemData;
-    } catch (error) {
-      console.error("addNewItem error", error);
-      alert("Error adding item: " + error.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function deleteItem(id) {
-    const isSeller = sellerItems.find((it) => it.id === id);
-    if (!isSeller) {
-      alert("You do not have permission to delete this item.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.from("items").delete().eq("id", id);
-      if (error) throw error;
-      
-      // Refresh data
-      await fetchItems();
-      await fetchSellerItems();
-    } catch (error) {
-      console.error("deleteItem error", error);
-      alert("Error deleting item: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
+  // Favorites
   async function toggleFavorite(item) {
     if (!profile) {
       alert("Please log in to favorite items.");
@@ -559,120 +353,197 @@ export default function App() {
       const exists = favorites.find((f) => f.id === item.id);
       
       if (exists) {
-        const { error } = await supabase
+        await supabase
           .from("favorites")
           .delete()
           .match({ user_id: profile.id, item_id: item.id });
-        if (error) throw error;
       } else {
-        const { error } = await supabase
+        await supabase
           .from("favorites")
           .insert({ user_id: profile.id, item_id: item.id });
-        if (error) throw error;
       }
       
-      await fetchFavorites();
+      // Reload favorites
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("id, items(*)")
+        .eq("user_id", profile.id);
+      
+      if (!error && data) {
+        const favItems = data.map((f) => ({
+          ...f.items,
+          favorite_id: f.id,
+        }));
+        setFavorites(favItems);
+      }
     } catch (error) {
-      console.error("toggleFavorite error", error);
+      console.error("Toggle favorite error:", error);
     } finally {
       setLoading(false);
     }
   }
-  
+
+  // Admin functions
+  async function addNewItem(itemData) {
+    if (!profile || !isAdmin) {
+      alert("Admin access required");
+      return false;
+    }
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("items")
+        .insert({
+          title: itemData.title,
+          price: itemData.price,
+          img: itemData.img,
+          type: itemData.type,
+          origin: itemData.origin,
+          material: itemData.material,
+          era: itemData.era,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Refresh items
+      const { data: newItems } = await supabase
+        .from("items")
+        .select("*")
+        .order("id", { ascending: false });
+      
+      setItems(newItems || []);
+      return true;
+    } catch (error) {
+      console.error("Add new item error:", error);
+      alert("Error adding item");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteItem(itemId) {
+    if (!profile || !isAdmin) {
+      alert("Admin access required");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("items")
+        .delete()
+        .eq("id", itemId);
+      
+      if (error) throw error;
+      
+      // Refresh items
+      const { data: newItems } = await supabase
+        .from("items")
+        .select("*")
+        .order("id", { ascending: false });
+      
+      setItems(newItems || []);
+      alert("Item deleted successfully!");
+    } catch (error) {
+      console.error("Delete item error:", error);
+      alert("Error deleting item");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchAllOrders() {
+    if (!isAdmin) return [];
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("placed_at", { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Fetch all orders error:", error);
+      return [];
+    }
+  }
+
+  async function fetchAllUsers() {
+    if (!isAdmin) return [];
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Fetch all users error:", error);
+      return [];
+    }
+  }
+
+  async function updateOrderStatus(orderId, newStatus) {
+    if (!profile || !isAdmin) {
+      alert("Admin access required");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+      
+      if (error) throw error;
+      alert(`Order ${orderId} status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Update order status error:", error);
+      alert("Error updating order status");
+    }
+  }
+
+  async function updateUserRole(userId, newRole) {
+    if (!profile || !isAdmin) {
+      alert("Admin access required");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole })
+        .eq("id", userId);
+      
+      if (error) throw error;
+      alert(`User role updated to ${newRole}`);
+    } catch (error) {
+      console.error("Update user role error:", error);
+      alert("Error updating user role");
+    }
+  }
+
+  // Logout - Fixed to go to login page
   async function handleLogout() {
     setLoading(true);
     try {
       await supabase.auth.signOut();
-      setSession(null);
       setProfile(null);
+      setIsAdmin(false);
       setCart([]);
       setFavorites([]);
       setOrders([]);
       setNotifications([]);
       setPaymentMethods([]);
-      setSellerItems([]);
       setCurrentPage("login"); // Go to login page after logout
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-  
-  async function addCard() {
-    if (!profile) return;
-    
-    setLoading(true);
-    try {
-      const brands = ["Visa", "Mastercard", "Amex"];
-      const randomBrand = brands[Math.floor(Math.random() * brands.length)];
-      const randomLast4 = Math.floor(1000 + Math.random() * 9000).toString();
-      
-      const { error } = await supabase.from("payment_methods").insert({
-        user_id: profile.id,
-        brand: randomBrand,
-        last4: randomLast4,
-      });
-      
-      if (error) throw error;
-      await fetchPaymentMethods();
-    } catch (error) {
-      console.error("addCard error", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function removeCard(id) {
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("payment_methods")
-        .delete()
-        .eq("id", id);
-      
-      if (error) throw error;
-      await fetchPaymentMethods();
-    } catch (error) {
-      console.error("removeCard error", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function markNotificationAsRead(id) {
-    try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", id);
-      
-      if (error) throw error;
-      await fetchNotifications();
-    } catch (error) {
-      console.error("markNotificationAsRead error", error);
-    }
-  }
-
-  async function becomeSeller() {
-    if (!profile) return;
-    
-    if (!confirm("Are you sure you want to open a seller account?")) return;
-    
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_seller: true })
-        .eq('id', profile.id);
-      
-      if (error) throw error;
-      
-      setProfile(p => ({...p, is_seller: true}));
-      alert("Congratulations! You are now a seller. You can start listing items.");
-    } catch (error) {
-      console.error("Error updating profile", error);
-      alert("Failed to update profile.");
+      setCurrentPage("login"); // Go to login page even on error
     } finally {
       setLoading(false);
     }
@@ -680,28 +551,19 @@ export default function App() {
 
   return (
     <div className="bg-gray-50 min-h-screen text-gray-800 font-sans">
-      {/* Debug info - remove in production */}
-      <div className="fixed top-2 left-2 z-50 bg-black/80 text-white text-xs p-2 rounded opacity-70">
-        Page: {currentPage} | Auth: {authLoading ? "Loading..." : "Ready"} | User: {profile ? profile.display_name : "None"}
-      </div>
-      
       <PageRouter
         currentPage={currentPage}
-        authLoading={authLoading}
-        loading={loading}
-        loadingItems={loadingItems}
         profile={profile}
-        isSellerView={isSellerView}
+        isAdmin={isAdmin}
         items={items}
         cart={cart}
-        setCart={setCart}
         favorites={favorites}
         orders={orders}
-        setOrders={setOrders}
         notifications={notifications}
         paymentMethods={paymentMethods}
-        sellerItems={sellerItems}
         favoriteTab={favoriteTab}
+        loading={loading}
+        loadingItems={loadingItems}
         formatCurrency={formatCurrency}
         changePage={changePage}
         goBack={goBack}
@@ -710,13 +572,15 @@ export default function App() {
         removeFromCart={removeFromCart}
         updateCartQty={updateCartQty}
         toggleFavorite={toggleFavorite}
+        setFavoriteTab={setFavoriteTab}
+        setCart={setCart}
+        setOrders={setOrders}
         addNewItem={addNewItem}
         deleteItem={deleteItem}
-        addCard={addCard}
-        removeCard={removeCard}
-        markNotificationAsRead={markNotificationAsRead}
-        setFavoriteTab={setFavoriteTab}
-        becomeSeller={becomeSeller}
+        updateOrderStatus={updateOrderStatus}
+        updateUserRole={updateUserRole}
+        fetchAllOrders={fetchAllOrders}
+        fetchAllUsers={fetchAllUsers}
       />
       
       <LoadingOverlay loading={loading} />

@@ -13,7 +13,8 @@ export default function FavoritesPage({
   toggleFavorite, 
   addToCart, 
   formatCurrency, 
-  goBack 
+  goBack,
+  changePage
 }) {
   const favoriteItems = items.filter(it => favorites.some(f => f.id === it.id));
   
@@ -92,7 +93,7 @@ export default function FavoritesPage({
         )}
       </div>
       
-      <BottomNav changePage={() => {}} />
+      <BottomNav changePage={changePage} />
     </div>
   );
 }

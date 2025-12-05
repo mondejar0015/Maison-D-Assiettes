@@ -14,7 +14,6 @@ export default function SignUpPage({ changePage, loading }) {
     setSignupError("");
     setSuccessMessage("");
 
-    // Validate inputs
     if (!email || !password || !displayName) {
       setSignupError("Please fill in all required fields");
       return;
@@ -26,7 +25,22 @@ export default function SignUpPage({ changePage, loading }) {
     }
 
     try {
-      // Sign up the user
+      // First check if user exists by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
+
+      // If sign in works, user already exists
+      if (!signInError) {
+        setSignupError("User already exists. Please log in instead.");
+        setTimeout(() => {
+          changePage("login");
+        }, 2000);
+        return;
+      }
+
+      // If we get here, user doesn't exist, so create account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password: password,
@@ -34,64 +48,61 @@ export default function SignUpPage({ changePage, loading }) {
           data: {
             display_name: displayName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       
       if (authError) {
-        console.error("Signup auth error:", authError);
-        setSignupError(authError.message || "Signup failed");
+        if (authError.message.includes("User already registered")) {
+          setSignupError("User already exists. Please log in instead.");
+          setTimeout(() => {
+            changePage("login");
+          }, 2000);
+        } else {
+          setSignupError(authError.message || "Signup failed");
+        }
         return;
       }
 
       if (authData.user) {
-        // Create profile in database
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: authData.user.id,
-              email: email.trim().toLowerCase(),
-              display_name: displayName,
-              role: 'customer',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'id'
-            });
+        // Create profile with default 'customer' role
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            email: email.trim().toLowerCase(),
+            display_name: displayName,
+            role: 'customer',
+          }, {
+            onConflict: 'id'
+          });
 
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-            // Don't show error to user if profile fails - auth user is still created
-          }
-        } catch (profileErr) {
-          console.error("Profile creation exception:", profileErr);
-        }
-
-        // Check if email confirmation is required
-        if (authData.user.identities && authData.user.identities.length === 0) {
-          setSuccessMessage(
-            "A user with this email already exists. Please try logging in instead."
-          );
-          setTimeout(() => changePage("login"), 3000);
-          return;
-        }
-
-        if (!authData.user.email_confirmed_at) {
-          setSuccessMessage(
-            "Account created successfully! Please check your email to confirm your account. " +
-            "After confirming, you can log in."
-          );
-        } else {
-          setSuccessMessage(
-            "Account created successfully! You can now log in."
-          );
-          setTimeout(() => changePage("login"), 2000);
-        }
+        setSuccessMessage(
+          "Account created successfully! You are now logged in."
+        );
+        
+        // Auto-login after signup
+        setTimeout(() => {
+          handleLogin();
+        }, 1500);
       }
     } catch (error) {
       console.error("Unexpected signup error:", error);
       setSignupError("An unexpected error occurred. Please try again.");
+    }
+  }
+
+  async function handleLogin() {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
+      
+      if (error) {
+        setSignupError("Auto-login failed. Please try logging in manually.");
+      }
+    } catch (error) {
+      console.error("Auto-login error:", error);
     }
   }
 
@@ -186,16 +197,6 @@ export default function SignUpPage({ changePage, loading }) {
               onClick={handleLoginRedirect}
             >
               Log In
-            </button>
-          </div>
-          
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => changePage("home")}
-              className="text-xs text-gray-500 underline"
-            >
-              Continue as guest (limited access)
             </button>
           </div>
         </div>

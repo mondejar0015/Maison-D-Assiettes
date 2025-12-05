@@ -2,7 +2,6 @@ import React from "react";
 
 export default function StartingPage({ changePage }) {
   const handleStart = () => {
-    console.log("🎬 Starting button clicked, going to login page");
     changePage("login");
   };
 

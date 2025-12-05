@@ -3,7 +3,7 @@ import { MagnifyingGlassIcon, ChevronRightIcon, ClockIcon } from "@heroicons/rea
 import PageHeader from "../shared/PageHeader.jsx";
 import BottomNav from "../shared/BottomNav.jsx";
 
-export default function HistoryPage({ orders, formatCurrency }) {
+export default function HistoryPage({ orders, formatCurrency, changePage, goBack }) {
   const [searchTerm, setSearchTerm] = useState("");
   
   const filteredOrders = orders.filter(o => 
@@ -13,7 +13,7 @@ export default function HistoryPage({ orders, formatCurrency }) {
   
   return (
     <div className="min-h-screen bg-white pb-20">
-      <PageHeader title="History" showCart={true} />
+      <PageHeader title="History" showBack={true} onBack={goBack} showCart={true} changePage={changePage} />
       
       <div className="p-4 space-y-4">
         {/* Search Bar */}
@@ -52,7 +52,7 @@ export default function HistoryPage({ orders, formatCurrency }) {
         </div>
       </div>
       
-      <BottomNav />
+      <BottomNav changePage={changePage} />
     </div>
   );
 }

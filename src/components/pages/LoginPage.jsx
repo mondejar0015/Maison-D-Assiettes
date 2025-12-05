@@ -26,64 +26,12 @@ export default function LoginPage({ changePage, loading }) {
       });
       
       if (error) {
-        console.error("Login error:", error);
-        
-        // Handle specific error cases
-        if (error.message.includes("Email not confirmed")) {
-          setLoginError(
-            "Email not confirmed. Please check your inbox for the confirmation email. " +
-            "If you didn't receive it, try signing up again or check your spam folder."
-          );
-          
-          // Offer to resend confirmation email
-          try {
-            await supabase.auth.resend({
-              type: 'signup',
-              email: email.trim().toLowerCase(),
-            });
-            setLoginError(prev => prev + " A new confirmation email has been sent.");
-          } catch (resendError) {
-            console.error("Failed to resend confirmation:", resendError);
-          }
-        } else if (error.message.includes("Invalid login credentials")) {
+        if (error.message.includes("Invalid login credentials")) {
           setLoginError("Invalid email or password. Please try again.");
-        } else if (error.message.includes("User not found")) {
-          setLoginError("No account found with this email. Please sign up first.");
         } else {
           setLoginError(error.message || "Login failed. Please check your credentials.");
         }
         return;
-      }
-      
-      // Login successful - ensure profile exists
-      if (data.user) {
-        try {
-          // Check if profile exists
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          if (profileError || !profile) {
-            // Create profile if it doesn't exist
-            await supabase
-              .from('profiles')
-              .upsert({
-                id: data.user.id,
-                email: data.user.email,
-                display_name: data.user.user_metadata?.display_name || data.user.email?.split('@')[0],
-                role: 'customer',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-          }
-        } catch (profileErr) {
-          console.error("Profile check/creation error:", profileErr);
-        }
-
-        console.log("✅ Login successful:", data);
-        // Auth listener in App.jsx will handle redirect to home
       }
     } catch (err) {
       console.error("Unexpected login error:", err);
@@ -94,38 +42,7 @@ export default function LoginPage({ changePage, loading }) {
   }
 
   const handleSignUpRedirect = () => {
-    console.log("📝 Redirecting to signup page");
     changePage("signup");
-  };
-
-  const handleDemoLogin = () => {
-    setEmail("demo@example.com");
-    setPassword("demo123");
-    // Auto-login after setting credentials
-    setTimeout(() => {
-      handleLogin("demo@example.com", "demo123");
-    }, 100);
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setLoginError("Please enter your email address first");
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        setLoginError("Failed to send reset email: " + error.message);
-      } else {
-        setLoginError(`Password reset email sent to ${email}. Check your inbox.`);
-      }
-    } catch (err) {
-      setLoginError("Failed to send reset email");
-    }
   };
 
   return (
@@ -155,11 +72,7 @@ export default function LoginPage({ changePage, loading }) {
 
         <div className="w-full space-y-4 max-w-xs">
           {loginError && (
-            <div className={`text-xs p-3 rounded-lg ${
-              loginError.includes("sent") 
-                ? "bg-green-50 border border-green-200 text-green-700" 
-                : "bg-red-50 border border-red-200 text-red-700"
-            }`}>
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg">
               {loginError}
             </div>
           )}
@@ -196,24 +109,6 @@ export default function LoginPage({ changePage, loading }) {
             {isLoading ? "Signing in..." : "Sign In"}
           </button>
           
-          <div className="flex justify-between items-center text-sm">
-            <button
-              type="button"
-              className="text-blue-600 font-medium hover:text-blue-700"
-              onClick={handleDemoLogin}
-            >
-              Use demo account
-            </button>
-            
-            <button
-              type="button"
-              className="text-gray-600 hover:text-gray-800"
-              onClick={handleForgotPassword}
-            >
-              Forgot password?
-            </button>
-          </div>
-          
           <div className="text-center text-xs text-gray-600 pt-4 border-t border-gray-200">
             Don't have an account?{" "}
             <button
@@ -222,16 +117,6 @@ export default function LoginPage({ changePage, loading }) {
               onClick={handleSignUpRedirect}
             >
               Create Account
-            </button>
-          </div>
-          
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => changePage("home")}
-              className="text-xs text-gray-500 underline"
-            >
-              Continue as guest (limited access)
             </button>
           </div>
         </div>

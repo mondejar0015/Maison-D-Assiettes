@@ -12,7 +12,8 @@ export default function CategoriesPage({
   favorites, 
   formatCurrency, 
   toggleFavorite, 
-  addToCart 
+  addToCart,
+  changePage
 }) {
   const [filterType, setFilterType] = useState("all");
   const [filterOrigin, setFilterOrigin] = useState("all");
@@ -44,7 +45,7 @@ export default function CategoriesPage({
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      <PageHeader title="Categories" showCart={true} />
+      <PageHeader title="Categories" showCart={true} changePage={changePage} />
       
       <div className="p-4 space-y-4">
         <div className="border-2 border-gray-200 rounded-xl p-4 bg-white shadow-sm">
@@ -172,7 +173,7 @@ export default function CategoriesPage({
         </div>
       </div>
       
-      <BottomNav />
+      <BottomNav changePage={changePage} />
     </div>
   );
 }

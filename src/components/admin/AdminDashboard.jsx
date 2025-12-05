@@ -6,7 +6,8 @@ import {
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon,
   PlusIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
 import AdminHeader from "./shared/AdminHeader.jsx";
 import AdminStatsCard from "./shared/AdminStatsCard.jsx";
@@ -14,7 +15,6 @@ import AdminStatsCard from "./shared/AdminStatsCard.jsx";
 export default function AdminDashboard({ 
   profile,
   items,
-  adminItems,
   formatCurrency,
   changePage,
   handleLogout,
@@ -59,14 +59,40 @@ export default function AdminDashboard({
     }
   }
 
+  // Custom Admin Header with Back Button
+  const CustomAdminHeader = () => (
+    <div className="bg-gradient-to-r from-blue-900 to-purple-800 text-white p-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => changePage("home")}
+            className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            View Site
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              Welcome back, {profile?.display_name || 'Administrator'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition"
+        >
+          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Admin Header */}
-      <AdminHeader 
-        title="Admin Dashboard"
-        subtitle={`Welcome back, ${profile?.display_name || 'Administrator'}`}
-        onLogout={handleLogout}
-      />
+      {/* Custom Admin Header */}
+      <CustomAdminHeader />
 
       <div className="p-6">
         {/* Quick Stats */}
@@ -155,7 +181,7 @@ export default function AdminDashboard({
           </div>
           
           <div className="space-y-3">
-            {adminItems.slice(0, 5).map((item) => (
+            {items.slice(0, 5).map((item) => (
               <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
@@ -178,7 +204,7 @@ export default function AdminDashboard({
               </div>
             ))}
             
-            {adminItems.length === 0 && (
+            {items.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 No items in inventory. Add your first item!
               </div>
@@ -189,15 +215,15 @@ export default function AdminDashboard({
         {/* Admin Navigation */}
         <div className="mt-8 grid grid-cols-2 gap-4">
           <button
-            onClick={() => changePage("home")}
-            className="py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-gray-700 transition"
+            onClick={() => changePage("addItem")}
+            className="py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium text-white transition"
           >
-            View as Customer
+            Add New Item
           </button>
           <button
             onClick={loadDashboardStats}
             disabled={loading}
-            className="py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium text-white transition disabled:opacity-50"
+            className="py-3 bg-gray-600 hover:bg-gray-700 rounded-xl font-medium text-white transition disabled:opacity-50"
           >
             {loading ? "Refreshing..." : "Refresh Dashboard"}
           </button>

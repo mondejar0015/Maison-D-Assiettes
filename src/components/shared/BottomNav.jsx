@@ -1,7 +1,7 @@
 import React from "react";
 import { HomeIcon, Squares2X2Icon, ClockIcon, UserIcon } from "@heroicons/react/24/outline";
 
-export default function BottomNav({ changePage }) {
+export default function BottomNav({ changePage = () => {} }) {
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-white/90 backdrop-blur-sm shadow-lg rounded-full py-2 px-4 flex justify-around items-center z-40 border border-gray-200">
       <button

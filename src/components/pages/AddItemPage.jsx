@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ITEM_TYPES, ITEM_ORIGINS, ITEM_ERAS, ITEM_MATERIALS } from "../../App.jsx";
 import PageHeader from "../shared/PageHeader.jsx";
-import BottomNav from "../shared/BottomNav.jsx";
 import Img from "../shared/Img.jsx";
 
 export default function AddItemPage({ 
@@ -32,7 +31,12 @@ export default function AddItemPage({
       return;
     }
     
-    await addNewItem({
+    if (!price || Number(price) <= 0) {
+      alert("Please provide a valid price");
+      return;
+    }
+    
+    const success = await addNewItem({
       title: name,
       price,
       img: preview || "/images/placeholder.png",
@@ -42,22 +46,24 @@ export default function AddItemPage({
       era: era,
     });
     
-    setName("");
-    setType(ITEM_TYPES[0]);
-    setOrigin(ITEM_ORIGINS[0]);
-    setMaterial(ITEM_MATERIALS[0]);
-    setEra(ITEM_ERAS[0]);
-    setPrice("");
-    setImage(null);
-    setPreview(null);
-    goBack();
+    if (success) {
+      setName("");
+      setType(ITEM_TYPES[0]);
+      setOrigin(ITEM_ORIGINS[0]);
+      setMaterial(ITEM_MATERIALS[0]);
+      setEra(ITEM_ERAS[0]);
+      setPrice("");
+      setImage(null);
+      setPreview(null);
+      goBack();
+    }
   }
 
   return (
     <div className="min-h-screen bg-white">
       <PageHeader title="Add New Item" showBack={true} onBack={goBack} />
       
-      <div className="p-4 pb-20">
+      <div className="p-4">
         <div className="border-2 border-gray-200 rounded-xl p-4 space-y-3 bg-white shadow-sm">
           <div className="text-center font-bold text-sm text-gray-800 mb-2">Add New Item</div>
           
@@ -108,6 +114,8 @@ export default function AddItemPage({
             className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400 text-sm"
             placeholder="Price"
             type="number"
+            min="0"
+            step="0.01"
           />
           
           <label className="block text-sm font-medium text-gray-700 mt-3">
@@ -117,6 +125,7 @@ export default function AddItemPage({
           <input
             type="file"
             onChange={onFile}
+            accept="image/*"
             className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
           
@@ -138,15 +147,13 @@ export default function AddItemPage({
               type="button"
               onClick={onConfirm}
               disabled={loading || !name.trim() || !price}
-              className="flex-1 py-2.5 rounded-full bg-blue-200 border-2 border-blue-400 text-gray-800 font-semibold hover:bg-blue-300 transition text-sm"
+              className="flex-1 py-2.5 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm
+              {loading ? "Adding..." : "Add Item"}
             </button>
           </div>
         </div>
       </div>
-      
-      <BottomNav changePage={changePage} />
     </div>
   );
 }
