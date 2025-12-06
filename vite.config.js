@@ -16,11 +16,5 @@ export default defineConfig({
         }
       }
     }
-  },
-  // Add this for Vercel
-  base: './',
-  server: {
-    host: true,
-    port: 5173
   }
 })
