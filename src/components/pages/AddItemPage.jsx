@@ -15,13 +15,13 @@ export default function AddItemPage({
   const [material, setMaterial] = useState(ITEM_MATERIALS[0]);
   const [era, setEra] = useState(ITEM_ERAS[0]);
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   
   function onFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImage(file);
+    setImageFile(file);
     setPreview(URL.createObjectURL(file));
   }
 
@@ -39,6 +39,7 @@ export default function AddItemPage({
     const success = await addNewItem({
       title: name,
       price,
+      imageFile: imageFile,
       img: preview || "/images/placeholder.png",
       type,
       origin,
@@ -53,7 +54,7 @@ export default function AddItemPage({
       setMaterial(ITEM_MATERIALS[0]);
       setEra(ITEM_ERAS[0]);
       setPrice("");
-      setImage(null);
+      setImageFile(null);
       setPreview(null);
       goBack();
     }

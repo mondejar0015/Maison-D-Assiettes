@@ -383,7 +383,34 @@ export default function App() {
     }
   }
 
-  // Admin functions
+  // Helper function to upload image to Supabase Storage
+  async function uploadImageToStorage(file, itemId) {
+    if (!file) return null;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${itemId}_${Date.now()}.${fileExt}`;
+    const filePath = `item-images/${fileName}`;
+    
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('item-images') // Make sure you have this bucket in Supabase Storage
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(filePath);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Image upload error:", error);
+      return null;
+    }
+  }
+
+  // Admin functions - FIXED
   async function addNewItem(itemData) {
     if (!profile || !isAdmin) {
       alert("Admin access required");
@@ -392,12 +419,13 @@ export default function App() {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First, create the item without image to get an ID
+      const { data: newItem, error: createError } = await supabase
         .from("items")
         .insert({
           title: itemData.title,
           price: itemData.price,
-          img: itemData.img,
+          img: "/images/placeholder.png", // Default placeholder
           type: itemData.type,
           origin: itemData.origin,
           material: itemData.material,
@@ -406,7 +434,26 @@ export default function App() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (createError) throw createError;
+      
+      // If there's an image file, upload it
+      let imageUrl = "/images/placeholder.png";
+      if (itemData.imageFile && newItem.id) {
+        const uploadedUrl = await uploadImageToStorage(itemData.imageFile, newItem.id);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+          
+          // Update the item with the new image URL
+          const { error: updateError } = await supabase
+            .from("items")
+            .update({ img: imageUrl })
+            .eq("id", newItem.id);
+          
+          if (updateError) {
+            console.error("Update image error:", updateError);
+          }
+        }
+      }
       
       // Refresh items
       const { data: newItems } = await supabase
@@ -418,7 +465,7 @@ export default function App() {
       return true;
     } catch (error) {
       console.error("Add new item error:", error);
-      alert("Error adding item");
+      alert("Error adding item: " + error.message);
       return false;
     } finally {
       setLoading(false);

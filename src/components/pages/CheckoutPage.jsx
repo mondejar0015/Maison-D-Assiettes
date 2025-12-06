@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../../supabaseClient.js";
 import PageHeader from "../shared/PageHeader.jsx";
+import { stripePromise } from "../../stripeClient.js"; // IMPORTED STRIPE
 
 export default function CheckoutPage({ 
   cart, 
@@ -15,11 +16,28 @@ export default function CheckoutPage({
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [notes, setNotes] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVC, setCardCVC] = useState("");
+  const [cardName, setCardName] = useState("");
   
   const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
   const shipping = cart.length ? 150 : 0;
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + shipping + tax;
+
+  // Uses stripePromise for a better demonstration of intent, even if simulated
+  const processCardPayment = async () => {
+    const stripe = await stripePromise;
+    if (!stripe) {
+      throw new Error("Stripe is not loaded.");
+    }
+    // Simulate successful payment intent creation (Replace with actual Stripe confirmPayment/confirmCardPayment call)
+    return { 
+      success: true, 
+      paymentIntentId: `pi_mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+  };
   
   async function handlePlaceOrder() {
     if (!address.trim()) {
@@ -32,7 +50,38 @@ export default function CheckoutPage({
       return;
     }
     
+    if (paymentMethod === "card") {
+      // Basic validation for demo
+      if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim() || !cardName.trim()) {
+        alert("Please fill in all card details");
+        return;
+      }
+      
+      if (cardNumber.replace(/\s/g, '').length < 16) {
+        alert("Please enter a valid 16-digit card number");
+        return;
+      }
+    }
+    
     try {
+      let paymentIntentId = null;
+      let initialStatus;
+
+      if (paymentMethod === "card") {
+        // Step 1: Process Payment
+        const paymentResult = await processCardPayment();
+        if (!paymentResult.success) {
+          alert("Payment failed. Please try again.");
+          return;
+        }
+        paymentIntentId = paymentResult.paymentIntentId;
+        // Status must be an allowed value: Use 'confirmed' for successful payment
+        initialStatus = "confirmed";
+      } else {
+        // Status must be an allowed value: Use 'processing' for pending payment (COD/Bank)
+        initialStatus = "processing";
+      }
+      
       // Create order
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
@@ -42,9 +91,10 @@ export default function CheckoutPage({
           shipping: shipping,
           tax: tax,
           total: total,
-          status: "processing",
+          status: initialStatus, // Use the determined, allowed status
           shipping_address: { address: address },
           payment_method: paymentMethod,
+          payment_intent_id: paymentIntentId,
           notes: notes
         })
         .select()
@@ -133,6 +183,7 @@ export default function CheckoutPage({
             className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400"
             placeholder="Enter your complete shipping address"
             rows="3"
+            required
           />
         </div>
         
@@ -144,12 +195,56 @@ export default function CheckoutPage({
           <select
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-blue-400 bg-white"
+            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-blue-400 bg-white mb-4"
           >
             <option value="card">Credit/Debit Card</option>
             <option value="cod">Cash on Delivery</option>
             <option value="bank">Bank Transfer</option>
           </select>
+
+          {paymentMethod === "card" && (
+            <div className="space-y-3">
+              <input
+                value={cardName}
+                onChange={(e) => setCardName(e.target.value)}
+                className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                placeholder="Name on Card"
+                required
+              />
+              
+              <input
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
+                className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                placeholder="Card Number"
+                maxLength={19}
+                required
+              />
+              
+              <div className="flex gap-3">
+                <input
+                  value={cardExpiry}
+                  onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, '').replace(/(.{2})/, '$1/').substring(0, 5))}
+                  className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                  placeholder="MM/YY"
+                  maxLength={5}
+                  required
+                />
+                <input
+                  value={cardCVC}
+                  onChange={(e) => setCardCVC(e.target.value.replace(/\D/g, '').substring(0, 4))}
+                  className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                  placeholder="CVC"
+                  maxLength={4}
+                  required
+                />
+              </div>
+              
+              <div className="text-xs text-gray-500 mt-2">
+                Test Card: 4242 4242 4242 4242 | Expiry: Any future date | CVC: Any 3 digits
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Notes */}

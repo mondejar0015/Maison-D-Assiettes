@@ -26,7 +26,7 @@ export default function AdminInventory({
   const [material, setMaterial] = useState("Porcelain");
   const [era, setEra] = useState(1900);
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
   const filteredItems = adminItems.filter(item =>
@@ -38,7 +38,7 @@ export default function AdminInventory({
   function onFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImage(file);
+    setImageFile(file);
     setPreview(URL.createObjectURL(file));
   }
 
@@ -51,6 +51,7 @@ export default function AdminInventory({
     const success = await addNewItem({
       title: name,
       price,
+      imageFile: imageFile,
       img: preview || "/images/placeholder.png",
       type,
       origin,
@@ -66,7 +67,7 @@ export default function AdminInventory({
       setMaterial("Porcelain");
       setEra(1900);
       setPrice("");
-      setImage(null);
+      setImageFile(null);
       setPreview(null);
       setShowAddForm(false);
       alert("Item added successfully!");

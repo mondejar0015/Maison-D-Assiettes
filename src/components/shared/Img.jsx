@@ -1,18 +1,18 @@
 import React from "react";
 
 export default function Img({ src, alt = "", className = "w-full h-full object-cover" }) {
-  // Check if src is a valid URL or use placeholder
-  const imageSrc = src && src.startsWith('http') ? src : "/images/placeholder.png";
-  
+  const [hasError, setHasError] = React.useState(false);
+
   return (
     <img
-      src={imageSrc}
+      src={hasError ? "/images/placeholder.png" : src}
       alt={alt}
       className={className}
-      onError={(e) => {
+      onError={() => {
         console.log(`Image failed to load: ${src}`);
-        e.currentTarget.src = "/images/placeholder.png";
+        setHasError(true);
       }}
+      loading="lazy"
     />
   );
 }
