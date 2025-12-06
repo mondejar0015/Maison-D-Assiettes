@@ -2,8 +2,8 @@ import { loadStripe } from '@stripe/stripe-js';
 
 export const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-// API base URL for server endpoints
-const API_BASE_URL = 'http://localhost:3001/api';
+// API base URL - automatically handles Vercel deployment
+const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
 // Create payment intent
 export async function createPaymentIntent(amount) {

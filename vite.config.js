@@ -6,5 +6,14 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173
+  },
+  // Add this for Vercel deployment
+  base: '/',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
+  define: {
+    'process.env': {}
   }
 })
