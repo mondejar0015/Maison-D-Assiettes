@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 // Create payment intent
 export async function createPaymentIntent(amount) {
   try {
-    const response = await fetch(`${API_BASE_URL}/create-payment-intent`, {
+    const response = await fetch(`${API_BASE_URL}/payment-intent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount })
@@ -23,7 +23,7 @@ export async function createPaymentIntent(amount) {
 // Create setup intent for saving cards
 export async function createSetupIntent(customerId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/create-setup-intent`, {
+    const response = await fetch(`${API_BASE_URL}/setup-intent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ customerId })
@@ -38,7 +38,7 @@ export async function createSetupIntent(customerId) {
 // Create customer
 export async function createCustomer(email, name) {
   try {
-    const response = await fetch(`${API_BASE_URL}/create-customer`, {
+    const response = await fetch(`${API_BASE_URL}/customer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, name })

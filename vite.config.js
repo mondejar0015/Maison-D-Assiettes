@@ -1,19 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    host: true,
-    port: 5173
-  },
-  // Add this for Vercel deployment
-  base: '/',
   build: {
     outDir: 'dist',
     sourcemap: false,
-  },
-  define: {
-    'process.env': {}
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+          stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js']
+        }
+      }
+    }
   }
 })

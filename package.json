@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "fix-auth": "node -e \"localStorage.clear(); sessionStorage.clear(); console.log('Auth cache cleared')\"",
-    "vercel-build": "npm run build"
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -34,23 +34,5 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "vite": "^7.1.7"
-  },
-  "description": "Maison D'Assiettes - Antique Plates Marketplace",
-  "main": "constants.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mondejar0015/Maison-D-Assiettes.git"
-  },
-  "keywords": [
-    "antique",
-    "plates",
-    "marketplace",
-    "ecommerce"
-  ],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mondejar0015/Maison-D-Assiettes/issues"
-  },
-  "homepage": "https://github.com/mondejar0015/Maison-D-Assiettes#readme"
+  }
 }
