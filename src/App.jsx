@@ -1,13 +1,15 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from "./supabaseClient.js";
 import PageRouter from "./components/PageRouter.jsx";
 import LoadingOverlay from "./components/LoadingOverlay.jsx";
 import "./App.css";
+import './index.css'; // <-- Add this if missing
 
 // --- PREDEFINED DATA LISTS ---
 export const ITEM_TYPES = [
-  "Dinner Plate", "Salad Plate", "Dessert Plate", "Soup Bowl", "Pasta Bowl",
-  "Charger Plate", "Serving Platter", "Saucer", "Teacup & Saucer Set", 
+  "Dinner Plate", "Salad Plate", "Dessert Plate",
+  "Charger Plate", "Serving Platter", 
   "Appetizer Plate", "Decorative Plate", "Complete Set"
 ];
 
@@ -40,7 +42,9 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stripeBlocked, setStripeBlocked] = useState(false);
+  const [initError, setInitError] = useState(null);
   const [favoriteTab, setFavoriteTab] = useState("items");
   const [loadingItems, setLoadingItems] = useState(false);
 
@@ -594,6 +598,59 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function init() {
+      try {
+        // Detect blocked third-party storage (Edge/strict privacy)
+        try {
+          localStorage.setItem('__storage_test', '1');
+          localStorage.removeItem('__storage_test');
+        } catch (e) {
+          console.warn('Storage blocked by browser privacy settings', e);
+          setStripeBlocked(true);
+        }
+
+        // Load Stripe with a timeout so the app doesn't hang
+        const loadPromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+        const stripe = await Promise.race([
+          loadPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Stripe load timeout')), 10000))
+        ]);
+
+        if (!stripe) {
+          throw new Error('Stripe failed to initialize');
+        }
+
+        // TODO: continue your existing init logic that fetches session / payment-intent etc.
+        // Make sure each fetch has try/catch and does not leave loading=true.
+      } catch (err) {
+        console.error('App initialization error:', err);
+        setInitError(err.message || String(err));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    init();
+
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return <div className="loading">Loading…</div>;
+  }
+
+  if (stripeBlocked || initError) {
+    return (
+      <div className="init-error">
+        <p>Initialization failed{initError ? `: ${initError}` : '.'}</p>
+        <p>If you see "Tracking Prevention blocked access to storage" in the console, allow storage/cookies for js.stripe.com or test in another browser (Chrome/Firefox) or use HTTPS (mkcert + dev certs).</p>
+      </div>
+    );
   }
 
   return (

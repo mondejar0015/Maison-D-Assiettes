@@ -3,12 +3,9 @@ export const ITEM_TYPES = [
   "Dinner Plate", 
   "Salad Plate", 
   "Dessert Plate", 
-  "Soup Bowl", 
-  "Pasta Bowl",
   "Charger Plate", 
   "Serving Platter", 
   "Saucer", 
-  "Teacup & Saucer Set", 
   "Appetizer Plate", 
   "Decorative Plate",
   "Complete Set"

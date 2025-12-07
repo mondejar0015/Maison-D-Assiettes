@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "fix-auth": "node -e \"localStorage.clear(); sessionStorage.clear(); console.log('Auth cache cleared')\"",
     "vercel-build": "vite build"
   },

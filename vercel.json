@@ -1,21 +1,9 @@
 {
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_STRIPE_PUBLISHABLE_KEY": "pk_test_51Sb2iVH1T1pEMUywktXdDZNv3pgp0fcE5Xp3gWtW2s9Asgkteb3NGWYbAh3KwGIJEACv880TVyBCmfikBided5Bf00tqc9OLs3",
+    "VITE_SUPABASE_URL": "https://biznyupyoignyytewdmt.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpem55dXB5b2lnbnl5dGV3ZG10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1ODk4MjEsImV4cCI6MjA4MDE2NTgyMX0.cpVzL5aSQ6CSANar-2AkBgvgGN4VPTeJ7RSo5juTTqc"
+  }
 }
