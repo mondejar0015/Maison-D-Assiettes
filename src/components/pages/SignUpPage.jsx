@@ -113,23 +113,13 @@ export default function SignUpPage({ changePage, loading }) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+        {/* Replace the badge div with SVG logo */}
         <div className="w-32 h-32 rounded-full border-4 border-blue-400 bg-white shadow-lg mx-auto flex items-center justify-center overflow-hidden mb-8">
-          <div className="relative w-20 h-24 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-blue-900 rounded-t-full"
-              style={{
-                clipPath: "polygon(50% 0%, 100% 0%, 85% 100%, 15% 100%, 0% 0%)",
-              }}
-            ></div>
-            <div className="relative z-10 text-center mt-3">
-              <div className="text-yellow-400 text-xs font-bold mb-1">⚜️</div>
-              <div className="text-white text-[7px] font-bold leading-tight px-2">
-                MAISON
-                <br />
-                D'ASSIETTES
-              </div>
-            </div>
-          </div>
+          <img 
+            src="/maison logo.svg" 
+            alt="Maison D'Assiettes" 
+            className="w-full h-full object-contain"
+          />
         </div>
         
         <h1 className="text-xl font-bold text-blue-900 mb-2">Create Account</h1>
