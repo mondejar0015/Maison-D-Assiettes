@@ -1,15 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://biznyupyoignyytewdmt.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpem55dXB5b2lnbnl5dGV3ZG10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1ODk4MjEsImV4cCI6MjA4MDE2NTgyMX0.cpVzL5aSQ6CSANar-2AkBgvgGN4VPTeJ7RSo5juTTqc";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    "❌ Supabase env vars missing. Check .env file contains VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY"
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  // Warn early — prevents silent failures
+  console.warn(
+    "Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(SUPABASE_URL ?? "", SUPABASE_ANON_KEY ?? "", {
+  auth: {
+    // disable automatic token refresh / session persistence in dev until URL validated
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false,
+  },
+  // use default fetch but surface network errors for easier debugging
+  global: {
+    fetch: (...args) =>
+      globalThis.fetch(...args).catch((err) => {
+        console.error("Network fetch failed (supabase):", err);
+        throw err;
+      }),
+  },
+});
 
 export async function testConnection() {
   try {
