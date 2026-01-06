@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase, SUPABASE_CONFIGURED } from "../supabaseClient";
 
 // Import all pages
 import StartingPage from "./pages/StartingPage.jsx";
@@ -93,10 +93,17 @@ export default function PageRouter({
   fetchAllUsers,
 }) {
   console.log("PageRouter rendering:", currentPage);
+  console.log('VITE_SUPABASE_URL=', import.meta.env.VITE_SUPABASE_URL);
 
   // Attempt an initial auth check if the app is on the starting/loading page.
   useEffect(() => {
     async function checkAuth() {
+      if (!SUPABASE_CONFIGURED) {
+        console.error('Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your env (local .env.local and Vercel).');
+        changePage('login'); // or show a friendly UI that explains configuration is missing
+        return;
+      }
+
       // Skip if no supabase url configured
       if (!import.meta.env.VITE_SUPABASE_URL) {
         console.warn("Skipping Supabase auth init: VITE_SUPABASE_URL not set.");

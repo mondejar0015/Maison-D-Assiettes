@@ -1,17 +1,19 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-// I added your keys directly here so it works even if Vercel env vars are missing
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://biznyupyoignyytewdmt.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpem55dXB5b2lnbnl5dGV3ZG10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1ODk4MjEsImV4cCI6MjA4MDE2NTgyMX0.cpVzL5aSQ6CSANar-2AkBgvgGN4VPTeJ7RSo5juTTqc';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn("Missing Supabase env vars.");
+export const SUPABASE_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+if (!SUPABASE_CONFIGURED) {
+  // Do NOT hardcode keys here. Warn so dev can see the issue.
+  // Important: if you previously committed keys, rotate the anon key in Supabase immediately.
+  console.warn('Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.');
 }
 
 let supabase = null;
 
-// This will now always run because the keys are hardcoded above
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+if (SUPABASE_CONFIGURED) {
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: true,
@@ -20,25 +22,27 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     },
   });
 } else {
-  // Fixed the crash by adding the missing functions, just in case
-  const makeError = (msg = "Supabase not configured") => ({ error: new Error(msg), data: null });
+  // Minimal graceful stub so imports won't throw in browser
+  const makeError = (msg = 'Supabase not configured') => ({ error: new Error(msg) });
+  const authStub = {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signInWithPassword: async () => makeError(),
+    signUp: async () => makeError(),
+    signOut: async () => makeError(),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+  };
+  const fromStub = () => ({
+    select: async () => makeError(),
+    insert: async () => makeError(),
+    upsert: async () => makeError(),
+    update: async () => makeError(),
+    delete: async () => makeError(),
+  });
 
   supabase = {
-    auth: {
-      signInWithPassword: async () => makeError(),
-      signUp: async () => makeError(),
-      signOut: async () => makeError(),
-      getSession: async () => makeError(), // Fixed: Added this to stop the crash
-      getUser: async () => makeError(),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-    },
-    from: () => ({
-      insert: async () => makeError(),
-      upsert: async () => makeError(),
-      select: async () => makeError(),
-      update: async () => makeError(),
-      delete: async () => makeError(),
-    }),
+    auth: authStub,
+    from: fromStub,
     rpc: async () => makeError(),
   };
 }
