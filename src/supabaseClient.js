@@ -4,40 +4,46 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  // Warn early — prevents silent failures
-  console.warn(
-    "Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."
-  );
+  console.warn("Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
 }
 
-export const supabase = createClient(SUPABASE_URL ?? "", SUPABASE_ANON_KEY ?? "", {
-  auth: {
-    // disable automatic token refresh / session persistence in dev until URL validated
-    autoRefreshToken: false,
-    persistSession: false,
-    detectSessionInUrl: false,
-  },
-  // use default fetch but surface network errors for easier debugging
-  global: {
-    fetch: (...args) =>
-      globalThis.fetch(...args).catch((err) => {
-        console.error("Network fetch failed (supabase):", err);
-        throw err;
-      }),
-  },
-});
+/**
+ * If credentials are present, create the real client.
+ * Otherwise export a safe stub with the minimal shape used across the app
+ * so imports don't throw at module evaluation time.
+ */
+let supabase = null;
 
-export async function testConnection() {
-  try {
-    const { data, error } = await supabase.from("profiles").select("id").limit(1);
-    if (error) {
-      console.error("❌ DB check failed:", error.message);
-      return false;
-    }
-    console.log("✅ DB connected, profiles table accessible");
-    return true;
-  } catch (err) {
-    console.error("❌ Connection test failed:", err);
-    return false;
-  }
+if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  });
+} else {
+  // Minimal graceful stub used by your code (adjust methods if you use more).
+  const makeError = (msg = "Supabase not configured") => ({ error: new Error(msg) });
+
+  supabase = {
+    auth: {
+      signInWithPassword: async () => makeError(),
+      signUp: async () => makeError(),
+      signOut: async () => makeError(),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    from: () => ({
+      insert: async () => makeError(),
+      upsert: async () => makeError(),
+      select: async () => makeError(),
+      update: async () => makeError(),
+      delete: async () => makeError(),
+    }),
+    // fallback generic rpc/query helper
+    rpc: async () => makeError(),
+  };
 }
+
+export { supabase };
+export default supabase;
